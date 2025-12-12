@@ -4,7 +4,7 @@
     "publisher": "mubashardev",
     "icon": "icon.png",
     "description": "Essential helper tools for managing .gitignore files",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "engines": {
         "vscode": "^1.90.0"
     },
