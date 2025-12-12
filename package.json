@@ -75,12 +75,17 @@
         },
         "configuration": {
             "type": "object",
-            "title": "Add to .gitignore",
+            "title": "Gitignore Helper",
             "properties": {
                 "addToGitignore.onlyInGitProjects": {
                     "type": "boolean",
                     "default": false,
                     "description": "Show 'Add to .gitignore' only in Git projects"
+                },
+                "addToGitignore.enableAutocomplete": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable autocomplete suggestions for files and folders in .gitignore"
                 }
             }
         }

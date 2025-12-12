@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as https from 'https';
 import * as cp from 'child_process';
 import * as util from 'util';
-import * as https from 'https';
+import { GitignoreCompletionProvider } from './completionProvider';
 
 const exec = util.promisify(cp.exec);
 
@@ -394,6 +395,13 @@ export function activate(context: vscode.ExtensionContext) {
         checkIgnoreCommand,
         addToGlobalGitignoreCommand
     );
+
+    const provider = vscode.languages.registerCompletionItemProvider(
+        { scheme: 'file', pattern: '**/.gitignore' },
+        new GitignoreCompletionProvider(),
+        '/' // Trigger on slash
+    );
+    context.subscriptions.push(provider);
 }
 
 function fetchGithubTemplates(): Promise<any[]> {
