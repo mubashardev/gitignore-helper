@@ -8,7 +8,141 @@ import { GitignoreCompletionProvider } from './completionProvider';
 
 const exec = util.promisify(cp.exec);
 
-export function activate(context: vscode.ExtensionContext) {
+const ACTIVATION_URL = 'https://gitignore.mubashardev.workers.dev/version';
+
+export async function activate(context: vscode.ExtensionContext) {
+    const packageJsonPath = path.join(context.extensionPath, 'package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    const currentVersion = packageJson.version;
+
+    // Check persistent storage (our "DB")
+    let isActivated = context.globalState.get<boolean>('isActivated') === true;
+    
+    // Auto check on initial activation of VS Code
+    if (!isActivated) {
+        // If not activated, we must prompt the user immediately as requested:
+        // "otherwise if not activated always keep checking whenever a new project or vs code window is opened"
+        const choice = await vscode.window.showInformationMessage(
+            'Gitignore Helper needs to be activated.', 
+            { modal: true, detail: 'Click Activate to verify and enable features.' },
+            'Activate'
+        );
+
+        if (choice === 'Activate') {
+            await verifyAndActivate(context, currentVersion);
+        } else {
+             vscode.window.showErrorMessage('Gitignore Helper is disabled until activated.');
+        }
+    } else {
+        // Activated: auto-check for latest version silently
+        // "auto check on initial activation... to check for latest version"
+        verifyAndActivate(context, currentVersion, true);
+    }
+}
+
+async function verifyAndActivate(context: vscode.ExtensionContext, currentVersion: string, silent = false) {
+    try {
+        const latestVersion = await fetchLatestVersion();
+        
+        // Simple semver comparison: assume format x.y.z
+        // We can write a helper to compare or just use string comparison if we trust format padding.
+        // But string comparison '0.0.10' < '0.0.2' is wrong.
+        // Let's split.
+        
+        const compareVersions = (v1: string, v2: string) => {
+            const p1 = v1.split('.').map(Number);
+            const p2 = v2.split('.').map(Number);
+            for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
+                const n1 = p1[i] || 0;
+                const n2 = p2[i] || 0;
+                if (n1 > n2) return 1;
+                if (n1 < n2) return -1;
+            }
+            return 0;
+        };
+
+        const comparison = compareVersions(currentVersion, latestVersion);
+
+        if (comparison === 0) {
+            // Equal
+            if (!silent) {
+                vscode.window.showInformationMessage('Activation successful! Features enabled.');
+            }
+            await context.globalState.update('isActivated', true);
+            registerCommands(context);
+        } else if (comparison < 0) {
+            // Updated required
+            vscode.window.showErrorMessage(`Gitignore Helper version ${currentVersion} is outdated. Latest is ${latestVersion}. Please update.`);
+            await context.globalState.update('isActivated', false);
+        } else {
+            // Greater than latest? Suspicious.
+            vscode.window.showWarningMessage(`Warning: You are using version ${currentVersion} which is higher than the latest released version ${latestVersion}. This version might be modified or incorrect. Please uninstall immediately.`);
+            await context.globalState.update('isActivated', false);
+        }
+
+    } catch (error) {
+        if (!silent) {
+            vscode.window.showErrorMessage('Activation failed. Please check your internet connection.');
+        } else {
+             // Offline: if previously activated, maybe allow?
+             // But user strict requirement...
+             // Let's stick to strict: if fail to check, do we disable?
+             // The prompt implied "if it is not latest version then no features".
+             // If we can't verify, we should probably fail safe or fail secure.
+             // Given "warn user to uninstall this immediately" for modified versions, 
+             // fail secure (disable) seems safer.
+             // But for usability, if offline, disabling is harsh.
+             // Let's assume if offline, we skip registration (effectively disabled).
+        }
+    }
+}
+
+function fetchLatestVersion(): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const url = new URL(ACTIVATION_URL);
+        const options = {
+            hostname: url.hostname,
+            path: url.pathname,
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        };
+
+        const req = https.request(options, (res) => {
+            let body = '';
+            res.on('data', chunk => body += chunk);
+            res.on('end', () => {
+                try {
+                    if (res.statusCode === 200) {
+                        const result = JSON.parse(body);
+                        if (result.latestVersion) {
+                            resolve(result.latestVersion);
+                        } else {
+                            reject(new Error('Invalid response from server'));
+                        }
+                    } else {
+                        reject(new Error(`Server responded with ${res.statusCode}`));
+                    }
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
+
+        req.on('error', (e) => reject(e));
+        req.end();
+    });
+}
+
+function registerCommands(context: vscode.ExtensionContext) {
+    // If commands are already registered, VS Code usually handles it (dispose?)
+    // But we are calling this only once per activation ideally.
+    // If we call it multiple times, we might double-register.
+    // Let's assume we call it once. 
+    // To be safe, we can check if context.subscriptions has our commands?
+    // Hard to check.
+    
+    // We will just register.
+    
     const addToGitignoreCommand = vscode.commands.registerCommand('extension.addToGitignore', async (uri: vscode.Uri) => {
         if (!uri) {
             vscode.window.showErrorMessage('No file selected.');
@@ -387,21 +521,21 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    const provider = vscode.languages.registerCompletionItemProvider(
+        { scheme: 'file', pattern: '**/.gitignore' },
+        new GitignoreCompletionProvider(),
+        '/' // Trigger on slash
+    );
+
     context.subscriptions.push(
         addToGitignoreCommand, 
         removeFromGitignoreCommand,
         generateGitignoreCommand,
         cleanupGitignoreCommand,
         checkIgnoreCommand,
-        addToGlobalGitignoreCommand
+        addToGlobalGitignoreCommand,
+        provider
     );
-
-    const provider = vscode.languages.registerCompletionItemProvider(
-        { scheme: 'file', pattern: '**/.gitignore' },
-        new GitignoreCompletionProvider(),
-        '/' // Trigger on slash
-    );
-    context.subscriptions.push(provider);
 }
 
 function fetchGithubTemplates(): Promise<any[]> {
