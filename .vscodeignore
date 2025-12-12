@@ -1,0 +1,11 @@
+.git
+.vscode
+.DS_Store
+src
+node_modules
+out/test
+input_data
+**/*.map
+tsconfig.json
+.eslintrc.json
+*.log

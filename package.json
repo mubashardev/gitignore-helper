@@ -1,8 +1,10 @@
 {
     "name": "gitignore-helper",
     "displayName": "Gitignore Helper",
+    "publisher": "mubashardev",
+    "icon": "icon.png",
     "description": "Essential helper tools for managing .gitignore files",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "engines": {
         "vscode": "^1.90.0"
     },
