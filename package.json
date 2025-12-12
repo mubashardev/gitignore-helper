@@ -3,6 +3,11 @@
     "displayName": "Gitignore Helper",
     "publisher": "mubashardev",
     "icon": "icon.png",
+    "license": "LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mubashardev/gitignore-helper"
+    },
     "description": "Essential helper tools for managing .gitignore files",
     "version": "0.0.6",
     "engines": {
