@@ -1,0 +1,109 @@
+{
+    "name": "gitignore-helper",
+    "displayName": "Gitignore Helper",
+    "description": "Essential helper tools for managing .gitignore files",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.90.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "extension.addToGitignore",
+                "title": "Add to .gitignore"
+            },
+            {
+                "command": "extension.removeFromGitignore",
+                "title": "Remove from .gitignore"
+            },
+            {
+                "command": "extension.generateGitignore",
+                "title": "Generate .gitignore..."
+            },
+            {
+                "command": "extension.cleanupGitignore",
+                "title": "Clean & Sort .gitignore"
+            },
+            {
+                "command": "extension.checkIgnore",
+                "title": "Check why file is ignored"
+            },
+            {
+                "command": "extension.addToGlobalGitignore",
+                "title": "Add to Global .gitignore"
+            }
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "command": "extension.addToGitignore",
+                    "group": "navigation@1",
+                    "when": "resourceScheme == file && (!config.addToGitignore.onlyInGitProjects || gitOpenRepositoryCount > 0)"
+                },
+                {
+                    "command": "extension.removeFromGitignore",
+                    "group": "navigation@2",
+                    "when": "resourceScheme == file && (!config.addToGitignore.onlyInGitProjects || gitOpenRepositoryCount > 0)"
+                },
+                {
+                    "command": "extension.checkIgnore",
+                    "group": "navigation@3",
+                    "when": "resourceScheme == file"
+                },
+                {
+                    "command": "extension.addToGlobalGitignore",
+                    "group": "navigation@4",
+                    "when": "resourceScheme == file"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "extension.generateGitignore",
+                    "group": "navigation",
+                    "when": "view == workbench.explorer.fileView"
+                },
+                {
+                    "command": "extension.cleanupGitignore",
+                    "group": "navigation",
+                    "when": "view == workbench.explorer.fileView"
+                }
+            ]
+        },
+        "configuration": {
+            "type": "object",
+            "title": "Add to .gitignore",
+            "properties": {
+                "addToGitignore.onlyInGitProjects": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show 'Add to .gitignore' only in Git projects"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.90.0",
+        "@types/glob": "^8.1.0",
+        "@types/mocha": "^10.0.1",
+        "@types/node": "20.2.5",
+        "@typescript-eslint/eslint-plugin": "^5.59.8",
+        "@typescript-eslint/parser": "^5.59.8",
+        "eslint": "^8.41.0",
+        "glob": "^8.1.0",
+        "mocha": "^10.2.0",
+        "typescript": "^5.1.3",
+        "@vscode/test-electron": "^2.3.2"
+    }
+}
