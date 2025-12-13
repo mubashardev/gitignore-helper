@@ -39,7 +39,7 @@ jobs:
       - name: Bump Version
         id: bump
         run: |
-          npm version patch -m "chore: bump version to %s"
+          npm version patch -m "chore: bump version to %s" --force
           git push origin main --follow-tags
           echo "NEW_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
 
