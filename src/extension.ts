@@ -174,7 +174,7 @@ function registerCommands(context: vscode.ExtensionContext) {
         const extension = path.extname(relativePath);
         
         const options: vscode.QuickPickItem[] = [
-            { label: relativePath, description: 'Add specific file' }
+            { label: relativePath, description: 'Add specific ' + (extension ? 'file' : 'folder') }
         ];
 
         if (extension) {
