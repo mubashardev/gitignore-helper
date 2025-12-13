@@ -47,27 +47,38 @@
                 "title": "Add to Global .gitignore"
             }
         ],
+        "submenus": [
+            {
+                "id": "gitignore-helper.submenu",
+                "label": "Gitignore Helper"
+            }
+        ],
         "menus": {
             "explorer/context": [
                 {
-                    "command": "extension.addToGitignore",
+                    "submenu": "gitignore-helper.submenu",
                     "group": "navigation@1",
-                    "when": "resourceScheme == file && (!config.addToGitignore.onlyInGitProjects || gitOpenRepositoryCount > 0)"
+                    "when": "resourceScheme == file"
+                }
+            ],
+            "gitignore-helper.submenu": [
+                {
+                    "command": "extension.addToGitignore",
+                    "group": "1_modification@1",
+                    "when": "!config.addToGitignore.onlyInGitProjects || gitOpenRepositoryCount > 0"
                 },
                 {
                     "command": "extension.removeFromGitignore",
-                    "group": "navigation@2",
-                    "when": "resourceScheme == file && (!config.addToGitignore.onlyInGitProjects || gitOpenRepositoryCount > 0)"
+                    "group": "1_modification@2",
+                    "when": "!config.addToGitignore.onlyInGitProjects || gitOpenRepositoryCount > 0"
                 },
                 {
                     "command": "extension.checkIgnore",
-                    "group": "navigation@3",
-                    "when": "resourceScheme == file"
+                    "group": "2_info@1"
                 },
                 {
                     "command": "extension.addToGlobalGitignore",
-                    "group": "navigation@4",
-                    "when": "resourceScheme == file"
+                    "group": "3_global@1"
                 }
             ],
             "view/title": [
