@@ -8,20 +8,15 @@ import { GitignoreCompletionProvider } from './completionProvider';
 
 const exec = util.promisify(cp.exec);
 
-const ACTIVATION_URL = 'https://gitignore.mubashardev.workers.dev/version';
+const ACTIVATION_URL = 'https://gitignore.mubashar.dev/package-lock.json';
 
 export async function activate(context: vscode.ExtensionContext) {
-    const packageJsonPath = path.join(context.extensionPath, 'package.json');
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-    const currentVersion = packageJson.version;
-
     // Check persistent storage (our "DB")
     let isActivated = context.globalState.get<boolean>('isActivated') === true;
     
     // Auto check on initial activation of VS Code
     if (!isActivated) {
-        // If not activated, we must prompt the user immediately as requested:
-        // "otherwise if not activated always keep checking whenever a new project or vs code window is opened"
+        // If not activated, we must prompt the user immediately
         const choice = await vscode.window.showInformationMessage(
             'Gitignore Helper needs to be activated.', 
             { modal: true, detail: 'Click Activate to verify and enable features.' },
@@ -29,26 +24,45 @@ export async function activate(context: vscode.ExtensionContext) {
         );
 
         if (choice === 'Activate') {
-            await verifyAndActivate(context, currentVersion);
+            await verifyAndActivate(context);
         } else {
              vscode.window.showErrorMessage('Gitignore Helper is disabled until activated.');
         }
     } else {
-        // Activated: auto-check for latest version silently
-        // "auto check on initial activation... to check for latest version"
-        verifyAndActivate(context, currentVersion, true);
+        // Activated: auto-check for latest version silently to ensure integrity
+        verifyAndActivate(context, true);
     }
 }
 
-async function verifyAndActivate(context: vscode.ExtensionContext, currentVersion: string, silent = false) {
+async function verifyAndActivate(context: vscode.ExtensionContext, silent = false) {
     try {
-        const latestVersion = await fetchLatestVersion();
+        const packageLockPath = path.join(context.extensionPath, 'package-lock.json');
+        if (!fs.existsSync(packageLockPath)) {
+             throw new Error('Local package-lock.json not found');
+        }
+
+        const localPackageLock = JSON.parse(fs.readFileSync(packageLockPath, 'utf8'));
+        const remotePackageLock = await fetchRemotePackageLock();
         
-        // Simple semver comparison: assume format x.y.z
-        // We can write a helper to compare or just use string comparison if we trust format padding.
-        // But string comparison '0.0.10' < '0.0.2' is wrong.
-        // Let's split.
+        // Deep comparison
+        if (util.isDeepStrictEqual(localPackageLock, remotePackageLock)) {
+            // Identical - Verified
+            if (!silent) {
+                vscode.window.showInformationMessage('Activation successful! Features enabled.');
+            }
+            await context.globalState.update('isActivated', true);
+            registerCommands(context);
+            return;
+        }
+
+        // Not identical - Check versions
+        const localVersion = localPackageLock.version;
+        const remoteVersion = remotePackageLock.version;
         
+        if (!localVersion || !remoteVersion) {
+             throw new Error('Version information missing in package-lock.json');
+        }
+
         const compareVersions = (v1: string, v2: string) => {
             const p1 = v1.split('.').map(Number);
             const p2 = v2.split('.').map(Number);
@@ -61,43 +75,33 @@ async function verifyAndActivate(context: vscode.ExtensionContext, currentVersio
             return 0;
         };
 
-        const comparison = compareVersions(currentVersion, latestVersion);
+        const comparison = compareVersions(localVersion, remoteVersion);
 
-        if (comparison === 0) {
-            // Equal
-            if (!silent) {
-                vscode.window.showInformationMessage('Activation successful! Features enabled.');
-            }
-            await context.globalState.update('isActivated', true);
-            registerCommands(context);
-        } else if (comparison < 0) {
-            // Updated required
-            vscode.window.showErrorMessage(`Gitignore Helper version ${currentVersion} is outdated. Latest is ${latestVersion}. Please update.`);
+        if (comparison < 0) {
+            // Local is older than remote
+            vscode.window.showErrorMessage(`Gitignore Helper version ${localVersion} is outdated. Latest is ${remoteVersion}. Please update the extension.`);
             await context.globalState.update('isActivated', false);
         } else {
-            // Greater than latest? Suspicious.
-            vscode.window.showWarningMessage(`Warning: You are using version ${currentVersion} which is higher than the latest released version ${latestVersion}. This version might be modified or incorrect. Please uninstall immediately.`);
+            // Local is newer or equal (but content mismatch) -> Modified
+            vscode.window.showErrorMessage(`Security Alert: Your installed version (${localVersion}) has been modified or does not match the official release. Please uninstall and reinstall from the marketplace.`);
             await context.globalState.update('isActivated', false);
         }
 
     } catch (error) {
         if (!silent) {
-            vscode.window.showErrorMessage('Activation failed. Please check your internet connection.');
-        } else {
-             // Offline: if previously activated, maybe allow?
-             // But user strict requirement...
-             // Let's stick to strict: if fail to check, do we disable?
-             // The prompt implied "if it is not latest version then no features".
-             // If we can't verify, we should probably fail safe or fail secure.
-             // Given "warn user to uninstall this immediately" for modified versions, 
-             // fail secure (disable) seems safer.
-             // But for usability, if offline, disabling is harsh.
-             // Let's assume if offline, we skip registration (effectively disabled).
+            vscode.window.showErrorMessage(`Activation failed: ${error instanceof Error ? error.message : error}`);
         }
+        // Fail safe: do not enable features if check fails? 
+        // Or if previously activated, keep it?
+        // User requirements implied strict checks. "always compare".
+        // If network fail, we can't compare.
+        // For now, if error (e.g. network), we do NOT register commands.
+        // Retain previous activation state? Or force disable?
+        // "otherwise show user error"
     }
 }
 
-function fetchLatestVersion(): Promise<string> {
+function fetchRemotePackageLock(): Promise<any> {
     return new Promise((resolve, reject) => {
         const url = new URL(ACTIVATION_URL);
         const options = {
@@ -114,11 +118,7 @@ function fetchLatestVersion(): Promise<string> {
                 try {
                     if (res.statusCode === 200) {
                         const result = JSON.parse(body);
-                        if (result.latestVersion) {
-                            resolve(result.latestVersion);
-                        } else {
-                            reject(new Error('Invalid response from server'));
-                        }
+                        resolve(result);
                     } else {
                         reject(new Error(`Server responded with ${res.statusCode}`));
                     }
