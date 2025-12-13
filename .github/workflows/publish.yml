@@ -39,15 +39,23 @@ jobs:
           git push origin main --follow-tags
           echo "NEW_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
 
+      - name: Package Extension
+        run: npx @vscode/vsce package
+
+      - name: Generate Release Notes
+        run: |
+          jq -r '.commits | map("- " + .message) | join("\n")' $GITHUB_EVENT_PATH > release_notes.txt
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ env.NEW_VERSION }}
           name: v${{ env.NEW_VERSION }}
-          generate_release_notes: true
+          body_path: release_notes.txt
+          files: "*.vsix"
 
       - name: Publish to Marketplace
-        run: npx @vscode/vsce publish -p ${{ secrets.VSCE_PAT }}
+        run: npx @vscode/vsce publish --packagePath gitignore-helper-${{ env.NEW_VERSION }}.vsix -p ${{ secrets.VSCE_PAT }}
 
       - name: Publish to Open VSX
-        run: npx ovsx publish -p ${{ secrets.OVSX_PAT }}
+        run: npx ovsx publish gitignore-helper-${{ env.NEW_VERSION }}.vsix -p ${{ secrets.OVSX_PAT }}
