@@ -4,7 +4,7 @@
 
 ## Features
 
-### 🚀 key Features
+### key Features
 
 - **Add to .gitignore**: Easily add files or folders to your `.gitignore` directly from the file explorer context menu.
 - **Remove from .gitignore**: Quickly remove entries from `.gitignore` via the context menu.
