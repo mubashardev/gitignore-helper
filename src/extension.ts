@@ -142,12 +142,14 @@ function registerCommands(context: vscode.ExtensionContext) {
         relativePath = relativePath.split(path.sep).join('/');
 
         const extension = path.extname(relativePath);
+        const stat = fs.statSync(uri.fsPath);
+        const isFile = stat.isFile();
         
         const options: vscode.QuickPickItem[] = [
-            { label: relativePath, description: 'Add specific ' + (extension ? 'file' : 'folder') }
+            { label: relativePath, description: 'Add specific ' + (isFile ? 'file' : 'folder') }
         ];
 
-        if (extension) {
+        if (isFile && extension) {
             options.push({ label: `*${extension}`, description: `Add all ${extension} files` });
         }
         
