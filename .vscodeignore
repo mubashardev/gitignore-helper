@@ -9,3 +9,4 @@ input_data
 tsconfig.json
 .eslintrc.json
 *.log
+!integrity.json

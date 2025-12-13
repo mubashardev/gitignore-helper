@@ -32,6 +32,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Inject Activation URL
+        run: |
+          echo "export const ACTIVATION_URL = '${{ secrets.ACTIVATION_URL }}';" > src/config.ts
+
       - name: Bump Version
         id: bump
         run: |

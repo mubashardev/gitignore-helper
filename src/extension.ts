@@ -8,7 +8,7 @@ import { GitignoreCompletionProvider } from './completionProvider';
 
 const exec = util.promisify(cp.exec);
 
-const ACTIVATION_URL = 'https://gitignore.mubashar.dev/package-lock.json';
+import { ACTIVATION_URL } from './config';
 
 export async function activate(context: vscode.ExtensionContext) {
     // Check persistent storage (our "DB")
@@ -36,54 +36,31 @@ export async function activate(context: vscode.ExtensionContext) {
 
 async function verifyAndActivate(context: vscode.ExtensionContext, silent = false) {
     try {
-        const packageLockPath = path.join(context.extensionPath, 'package-lock.json');
-        if (!fs.existsSync(packageLockPath)) {
-             throw new Error('Local package-lock.json not found');
+        const integrityPath = path.join(context.extensionPath, 'integrity.json');
+        
+        // If local integrity file is missing, it's a compromised or broken installation
+        if (!fs.existsSync(integrityPath)) {
+             throw new Error('Integrity file missing. Please reinstall the extension.');
         }
 
-        const localPackageLock = JSON.parse(fs.readFileSync(packageLockPath, 'utf8'));
-        const remotePackageLock = await fetchRemotePackageLock();
+        const localIntegrity = JSON.parse(fs.readFileSync(integrityPath, 'utf8'));
+        const remoteIntegrity = await fetchRemoteIntegrity();
         
-        // Deep comparison
-        if (util.isDeepStrictEqual(localPackageLock, remotePackageLock)) {
+        // Hash comparison
+        if (localIntegrity.hash === remoteIntegrity.hash) {
             // Identical - Verified
             if (!silent) {
                 vscode.window.showInformationMessage('Activation successful! Features enabled.');
             }
             await context.globalState.update('isActivated', true);
             registerCommands(context);
-            return;
-        }
-
-        // Not identical - Check versions
-        const localVersion = localPackageLock.version;
-        const remoteVersion = remotePackageLock.version;
-        
-        if (!localVersion || !remoteVersion) {
-             throw new Error('Version information missing in package-lock.json');
-        }
-
-        const compareVersions = (v1: string, v2: string) => {
-            const p1 = v1.split('.').map(Number);
-            const p2 = v2.split('.').map(Number);
-            for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
-                const n1 = p1[i] || 0;
-                const n2 = p2[i] || 0;
-                if (n1 > n2) return 1;
-                if (n1 < n2) return -1;
-            }
-            return 0;
-        };
-
-        const comparison = compareVersions(localVersion, remoteVersion);
-
-        if (comparison < 0) {
-            // Local is older than remote
-            vscode.window.showErrorMessage(`Gitignore Helper version ${localVersion} is outdated. Latest is ${remoteVersion}. Please update the extension.`);
-            await context.globalState.update('isActivated', false);
         } else {
-            // Local is newer or equal (but content mismatch) -> Modified
-            vscode.window.showErrorMessage(`Security Alert: Your installed version (${localVersion}) has been modified or does not match the official release. Please uninstall and reinstall from the marketplace.`);
+            // Hash mismatch - Security Risk
+            // This covers both "modified code" and "outdated code" implicitly because hash changes with code.
+            // We can check package.json version additionally if we want to distinguish "Update" vs "Hack",
+            // but strict hash check is safer.
+            
+            vscode.window.showErrorMessage(`Security Alert: Extension integrity check failed. The installed version does not match the official release (Hash mismatch). Please reinstall or update.`);
             await context.globalState.update('isActivated', false);
         }
 
@@ -91,17 +68,10 @@ async function verifyAndActivate(context: vscode.ExtensionContext, silent = fals
         if (!silent) {
             vscode.window.showErrorMessage(`Activation failed: ${error instanceof Error ? error.message : error}`);
         }
-        // Fail safe: do not enable features if check fails? 
-        // Or if previously activated, keep it?
-        // User requirements implied strict checks. "always compare".
-        // If network fail, we can't compare.
-        // For now, if error (e.g. network), we do NOT register commands.
-        // Retain previous activation state? Or force disable?
-        // "otherwise show user error"
     }
 }
 
-function fetchRemotePackageLock(): Promise<any> {
+function fetchRemoteIntegrity(): Promise<any> {
     return new Promise((resolve, reject) => {
         const url = new URL(ACTIVATION_URL);
         const options = {
