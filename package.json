@@ -74,12 +74,12 @@
                 {
                     "command": "extension.generateGitignore",
                     "group": "navigation",
-                    "when": "view == workbench.explorer.fileView"
+                    "when": "view == workbench.explorer.fileView && config.gitignoreHelper.showGenerateButton"
                 },
                 {
                     "command": "extension.cleanupGitignore",
                     "group": "navigation",
-                    "when": "view == workbench.explorer.fileView"
+                    "when": "view == workbench.explorer.fileView && config.gitignoreHelper.showCleanupButton"
                 }
             ]
         },
@@ -96,6 +96,16 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable autocomplete suggestions for files and folders in .gitignore"
+                },
+                "gitignoreHelper.showGenerateButton": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show 'Generate .gitignore' button in the file explorer title bar"
+                },
+                "gitignoreHelper.showCleanupButton": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show 'Clean & Sort .gitignore' button in the file explorer title bar"
                 }
             }
         }
