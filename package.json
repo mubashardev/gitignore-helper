@@ -9,7 +9,7 @@
         "url": "https://github.com/mubashardev/gitignore-helper"
     },
     "description": "Essential helper tools for managing .gitignore files",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "engines": {
         "vscode": "^1.90.0"
     },
