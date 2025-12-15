@@ -20,7 +20,6 @@
 
 Experience a new way to edit `.gitignore` files. Open any `.gitignore` file to launch the **Visual Editor**.
 
-![Visual Editor UI](https://github.com/mubashardev/gitignore-helper/raw/main/images/floating_buttons.png)
 
 ### Intelligent Autocomplete
 Typing in the editor provides context-aware suggestions for files and folders in your project, complete with icons. It even supports nested directories!
