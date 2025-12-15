@@ -323,7 +323,7 @@ function registerCommands(context: vscode.ExtensionContext) {
         const mode = await vscode.window.showQuickPick(
             [
                 { label: 'Smart Sort (Keep Sections & Comments)', description: 'Sorts rules within sections, preserving structure' },
-                { label: 'Flat Sort (Remove Comments)', description: 'Removes all comments and sorts everything alphabetically' }
+                { label: 'Flat Sort (Remove Comments)', description: 'Removes all comments and sorts everything globally' }
             ],
             { placeHolder: 'Select cleanup mode' }
         );
@@ -331,10 +331,12 @@ function registerCommands(context: vscode.ExtensionContext) {
         if (!mode) return;
 
         try {
-            const content = fs.readFileSync(gitignorePath, 'utf8');
+            const uri = vscode.Uri.file(gitignorePath);
+            const doc = await vscode.workspace.openTextDocument(uri);
+            const content = doc.getText();
             let finalContent = '';
 
-            if (mode.label.startsWith('Remove Comments')) {
+            if (mode.label.startsWith('Flat Sort')) {
                  const lines = content.split(/\r?\n/);
                  const uniqueLines = new Set<string>();
                  const cleanedLines: string[] = [];
@@ -402,8 +404,7 @@ function registerCommands(context: vscode.ExtensionContext) {
                 }).filter(s => s.length > 0).join('\n\n') + '\n';
             }
             
-            const uri = vscode.Uri.file(gitignorePath);
-            const doc = await vscode.workspace.openTextDocument(uri);
+
             const edit = new vscode.WorkspaceEdit();
             const range = new vscode.Range(0, 0, doc.lineCount, 0);
             edit.replace(uri, range, finalContent);
