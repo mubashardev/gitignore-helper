@@ -65,12 +65,12 @@
                 {
                     "command": "extension.addToGitignore",
                     "group": "1_modification@1",
-                    "when": "!config.addToGitignore.onlyInGitProjects || gitOpenRepositoryCount > 0"
+                    "when": "!config.gitignoreHelper.onlyInGitProjects || gitOpenRepositoryCount > 0"
                 },
                 {
                     "command": "extension.removeFromGitignore",
                     "group": "1_modification@2",
-                    "when": "!config.addToGitignore.onlyInGitProjects || gitOpenRepositoryCount > 0"
+                    "when": "!config.gitignoreHelper.onlyInGitProjects || gitOpenRepositoryCount > 0"
                 },
                 {
                     "command": "extension.checkIgnore",
@@ -81,16 +81,16 @@
                     "group": "3_global@1"
                 }
             ],
-            "view/title": [
+            "editor/title": [
                 {
                     "command": "extension.generateGitignore",
                     "group": "navigation",
-                    "when": "view == workbench.explorer.fileView && config.gitignoreHelper.showGenerateButton"
+                    "when": "resourceFilename == .gitignore"
                 },
                 {
                     "command": "extension.cleanupGitignore",
                     "group": "navigation",
-                    "when": "view == workbench.explorer.fileView && config.gitignoreHelper.showCleanupButton"
+                    "when": "resourceFilename == .gitignore"
                 }
             ]
         },
@@ -98,25 +98,15 @@
             "type": "object",
             "title": "Gitignore Helper",
             "properties": {
-                "addToGitignore.onlyInGitProjects": {
+                "gitignoreHelper.onlyInGitProjects": {
                     "type": "boolean",
                     "default": false,
                     "description": "Show 'Add to .gitignore' only in Git projects"
                 },
-                "addToGitignore.enableAutocomplete": {
+                "gitignoreHelper.enableAutocomplete": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable autocomplete suggestions for files and folders in .gitignore"
-                },
-                "gitignoreHelper.showGenerateButton": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Show 'Generate .gitignore' button in the file explorer title bar"
-                },
-                "gitignoreHelper.showCleanupButton": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Show 'Clean & Sort .gitignore' button in the file explorer title bar"
                 }
             }
         }

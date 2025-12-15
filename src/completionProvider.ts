@@ -4,7 +4,7 @@ import * as path from 'path';
 
 export class GitignoreCompletionProvider implements vscode.CompletionItemProvider {
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
-        const config = vscode.workspace.getConfiguration('addToGitignore');
+        const config = vscode.workspace.getConfiguration('gitignoreHelper');
         if (!config.get('enableAutocomplete')) {
             return [];
         }
