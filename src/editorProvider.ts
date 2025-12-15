@@ -268,11 +268,40 @@ export class GitignoreEditorProvider implements vscode.CustomTextEditorProvider 
                         display: inline-block;
                         flex-shrink: 0;
                     }
-                    /* SVG Icons as background images or inline IF simpler. Using inline standard SVGs for minimal deps */
                     
+                    /* Loader Styles */
+                    #loader {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background-color: var(--vscode-editor-background);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 3000;
+                    }
+                    .spinner {
+                        border: 3px solid var(--vscode-widget-border);
+                        border-top: 3px solid var(--vscode-progressBar-background);
+                        border-radius: 50%;
+                        width: 30px;
+                        height: 30px;
+                        animation: spin 1s linear infinite;
+                    }
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+
                 </style>
             </head>
             <body>
+                 <div id="loader">
+                    <div class="spinner"></div>
+                </div>
+
                 <div class="text-area-container">
                     <textarea id="editor" spellcheck="false"></textarea>
                     <div id="suggestion-box"></div>
@@ -291,6 +320,7 @@ export class GitignoreEditorProvider implements vscode.CustomTextEditorProvider 
                     const editor = document.getElementById('editor');
                     const suggestionBox = document.getElementById('suggestion-box');
                     const mirrorDiv = document.getElementById('mirror-div');
+                    const loader = document.getElementById('loader');
                     
                     let currentRequestId = 0;
                     let selectedIndex = -1;
@@ -303,6 +333,10 @@ export class GitignoreEditorProvider implements vscode.CustomTextEditorProvider 
                         const message = event.data;
                         switch (message.type) {
                             case 'update':
+                                // Hide loader on first update
+                                if (loader.style.display !== 'none') {
+                                    loader.style.display = 'none';
+                                }
                                 const text = message.text;
                                 if (text !== editor.value) {
                                     editor.value = text;
