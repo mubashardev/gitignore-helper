@@ -65,7 +65,14 @@ async function verifyAndActivate(context: vscode.ExtensionContext, silent = fals
                 registerCommands(context);
             } else {
                  // Production - Strict Enforcement
-                 vscode.window.showErrorMessage(`Security Alert: Extension integrity check failed. The installed version does not match the official release (Hash mismatch).`);
+                 const selection = await vscode.window.showErrorMessage(
+                     `Critical Update Required: A mandatory update is available. Features are paused until you update to the latest version.`,
+                     'Update Now'
+                 );
+                 
+                 if (selection === 'Update Now') {
+                     vscode.commands.executeCommand('workbench.extensions.search', '@id:mubashardev.gitignore-helper');
+                 }
                  await context.globalState.update('isActivated', false);
             }
         }
