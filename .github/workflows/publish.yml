@@ -12,7 +12,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: "!startsWith(github.event.head_commit.message, 'chore: bump version')"
+    if: "endsWith(github.event.head_commit.message, '[release]')"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -36,6 +36,23 @@ jobs:
         run: |
           echo "export const ACTIVATION_URL = '${{ secrets.ACTIVATION_URL }}';" > src/config.ts
 
+      - name: Generate Release Notes
+        run: |
+          # Find the previous commit that had [release] in the message
+          # We assume the current HEAD has [release], so we look for the next one back (skip=1)
+          LAST_RELEASE_SHA=$(git log --format="%H" --grep="\[release\]" --skip=1 -n 1)
+
+          if [ -z "$LAST_RELEASE_SHA" ]; then
+            echo "No previous release found, generating log from start."
+            git log --pretty=format:"- %s" > release_notes.txt
+          else
+            echo "Generating log from $LAST_RELEASE_SHA to HEAD"
+            git log --pretty=format:"- %s" $LAST_RELEASE_SHA..HEAD > release_notes.txt
+          fi
+          
+          echo "Release Notes Content:"
+          cat release_notes.txt
+
       - name: Bump Version
         id: bump
         run: |
@@ -45,10 +62,6 @@ jobs:
 
       - name: Package Extension
         run: npx @vscode/vsce package
-
-      - name: Generate Release Notes
-        run: |
-          jq -r '.commits | map("- " + .message) | join("\n")' $GITHUB_EVENT_PATH > release_notes.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
