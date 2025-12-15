@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gitignore Helper - Manage .gitignore like a Pro</title>
+    <meta name="description"
+        content="Visual Studio Code extension to generate, manage, and clean gitignore files with a visual editor and autocomplete.">
+    <link rel="stylesheet" href="landing.css">
+    <!-- Platform Icons (using FontAwesome CDN for convenience in standalone HTML) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- Ambient Background -->
+    <div class="background-blob blob-1"></div>
+    <div class="background-blob blob-2"></div>
+
+    <!-- Navigation -->
+    <header>
+        <div class="logo">Gitignore Helper</div>
+        <nav class="nav-links">
+            <a href="https://mubashar.dev" target="_blank">Portfolio</a>
+            <a href="https://github.com/mubashardev/gitignore-helper" target="_blank">GitHub</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero hidden">
+        <h1>Stop wrestling with<br><span>.gitignore</span></h1>
+        <p>The ultimate Visual Studio Code extension to generate, clean, and manage your ignore rules with a powerful
+            visual editor.</p>
+
+        <div class="cta-buttons">
+            <a href="https://marketplace.visualstudio.com/items?itemName=mubashardev.gitignore-helper"
+                class="btn btn-primary" target="_blank">
+                <i class="fab fa-microsoft"></i> VS Code Marketplace
+            </a>
+            <a href="https://open-vsx.org/extension/mubashardev/gitignore-helper" class="btn btn-secondary"
+                target="_blank">
+                <i class="fas fa-cube"></i> Open VSX
+            </a>
+        </div>
+    </section>
+
+    <!-- Preview Section -->
+    <section class="preview-section hidden">
+        <div class="preview-container">
+            <!-- Using the visual editor screenshot from the repo -->
+            <img src="https://github.com/mubashardev/gitignore-helper/raw/main/icon.png" alt="Extension Icon"
+                class="main-icon">
+            <div class="glow-effect"></div>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="features">
+        <h2 class="section-title hidden">Why you'll love it</h2>
+
+        <div class="feature-grid">
+            <div class="feature-card hidden">
+                <div class="feature-icon"><i class="fas fa-magic"></i></div>
+                <h3>Visual Editor</h3>
+                <p>Edit your .gitignore as a text file but with superpowers. Real-time path validation and structure.
+                </p>
+                <img src="https://github.com/mubashardev/gitignore-helper/raw/main/images/gitignore_typing_suggestions_1.gif"
+                    alt="Visual Editor UI" class="feature-image">
+            </div>
+
+            <div class="feature-card hidden">
+                <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                <h3>Smart Autocomplete</h3>
+                <p>Never typo a path again. Getting suggestions for files and folders directly from your workspace.</p>
+                <img src="https://github.com/mubashardev/gitignore-helper/raw/main/images/gitignore_typing_suggestions_2.gif"
+                    alt="Autocomplete Demo" class="feature-image">
+            </div>
+
+            <div class="feature-card hidden">
+                <div class="feature-icon"><i class="far fa-check-circle"></i></div>
+                <h3>Rule Validation</h3>
+                <p>Instantly check why a file is being ignored. Debug complex nested rules with a single click.</p>
+                <img src="https://github.com/mubashardev/gitignore-helper/raw/main/images/check_why_file_ignored.png"
+                    alt="Check Ignore Rule" class="feature-image">
+            </div>
+
+            <div class="feature-card hidden">
+                <div class="feature-icon"><i class="fas fa-broom"></i></div>
+                <h3>Clean & Sort</h3>
+                <p>Keep your .gitignore tidy. Automatically sort rules, remove duplicates, and organize by sections.</p>
+                <img src="https://github.com/mubashardev/gitignore-helper/raw/main/images/choose_sort_type.png"
+                    alt="Clean and Sort Options" class="feature-image">
+            </div>
+
+            <div class="feature-card hidden">
+                <div class="feature-icon"><i class="fas fa-cloud-download-alt"></i></div>
+                <h3>Generator</h3>
+                <p>Fetch standard Templates for Node, Python, Java, etc. directly from GitHub's official repository.</p>
+                <img src="https://github.com/mubashardev/gitignore-helper/raw/main/images/searching_gitignore_template.png"
+                    alt="Generator Search" class="feature-image">
+            </div>
+
+            <div class="feature-card hidden">
+                <div class="feature-icon"><i class="fas fa-globe"></i></div>
+                <h3>Global & Local</h3>
+                <p>Manage both your repository's .gitignore and your global user config effortlessly.</p>
+                <img src="https://github.com/mubashardev/gitignore-helper/raw/main/images/menu_options.png"
+                    alt="Context Menu Options" class="feature-image">
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>Designed & Developed with <i class="fas fa-heart" style="color: var(--secondary-color);"></i> by <a
+                href="https://mubashar.dev" target="_blank">Mubashar Dev</a></p>
+        <p><a href="https://github.com/mubashardev/gitignore-helper" target="_blank">View Source</a></p>
+    </footer>
+
+    <script src="landing.js"></script>
+</body>
+
+</html>
