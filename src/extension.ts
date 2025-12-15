@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as https from 'https';
 import * as cp from 'child_process';
 import * as util from 'util';
+import * as crypto from 'crypto';
 import { GitignoreCompletionProvider } from './completionProvider';
 import { GitignoreEditorProvider } from './editorProvider';
 
@@ -48,8 +49,19 @@ async function verifyAndActivate(context: vscode.ExtensionContext, silent = fals
         const localIntegrity = JSON.parse(fs.readFileSync(integrityPath, 'utf8'));
         const remoteIntegrity = await fetchRemoteIntegrity();
         
+        // Calculate runtime hash of extension.js
+        const extensionJsPath = path.join(context.extensionPath, 'out', 'extension.js');
+        if (!fs.existsSync(extensionJsPath)) {
+             throw new Error('Extension entry point not found.');
+        }
+        
+        const fileContent = fs.readFileSync(extensionJsPath);
+        const calculatedHash = crypto.createHash('sha256').update(new Uint8Array(fileContent)).digest('hex');
+
+        console.log(`Integrity Check: Runtime Hash: ${calculatedHash}, Remote Hash: ${remoteIntegrity.hash}`);
+
         // Hash comparison
-        if (localIntegrity.hash === remoteIntegrity.hash) {
+        if (calculatedHash === remoteIntegrity.hash) {
             // Identical - Verified
             if (!silent) {
                 vscode.window.showInformationMessage('Activation successful! Features enabled.');
