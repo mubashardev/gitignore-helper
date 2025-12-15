@@ -21,6 +21,18 @@
         "onStartupFinished"
     ],
     "contributes": {
+        "customEditors": [
+            {
+                "viewType": "gitignore-helper.editor",
+                "displayName": "Gitignore Visual Editor",
+                "selector": [
+                    {
+                        "filenamePattern": ".gitignore"
+                    }
+                ],
+                "priority": "default"
+            }
+        ],
         "commands": [
             {
                 "command": "extension.addToGitignore",
@@ -79,18 +91,6 @@
                 {
                     "command": "extension.addToGlobalGitignore",
                     "group": "3_global@1"
-                }
-            ],
-            "editor/title": [
-                {
-                    "command": "extension.generateGitignore",
-                    "group": "navigation",
-                    "when": "resourceFilename == .gitignore"
-                },
-                {
-                    "command": "extension.cleanupGitignore",
-                    "group": "navigation",
-                    "when": "resourceFilename == .gitignore"
                 }
             ]
         },

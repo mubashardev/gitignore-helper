@@ -5,12 +5,14 @@ import * as https from 'https';
 import * as cp from 'child_process';
 import * as util from 'util';
 import { GitignoreCompletionProvider } from './completionProvider';
+import { GitignoreEditorProvider } from './editorProvider';
 
 const exec = util.promisify(cp.exec);
 
 import { ACTIVATION_URL } from './config';
 
 export async function activate(context: vscode.ExtensionContext) {
+    console.log('Gitignore Helper: Activating...');
     // Check persistent storage (our "DB")
     let isActivated = context.globalState.get<boolean>('isActivated') === true;
     
@@ -55,18 +57,28 @@ async function verifyAndActivate(context: vscode.ExtensionContext, silent = fals
             await context.globalState.update('isActivated', true);
             registerCommands(context);
         } else {
-            // Hash mismatch - Security Risk
-            // This covers both "modified code" and "outdated code" implicitly because hash changes with code.
-            // We can check package.json version additionally if we want to distinguish "Update" vs "Hack",
-            // but strict hash check is safer.
-            
-            vscode.window.showErrorMessage(`Security Alert: Extension integrity check failed. The installed version does not match the official release (Hash mismatch). Please reinstall or update.`);
-            await context.globalState.update('isActivated', false);
+            // Hash mismatch
+            if (context.extensionMode === vscode.ExtensionMode.Development) {
+                // Bypass for development
+                console.log('Integrity mismatch ignored for dev: ', localIntegrity.hash, remoteIntegrity.hash);
+                vscode.window.showWarningMessage('Dev Mode: Integrity mismatch bypassed.');
+                registerCommands(context);
+            } else {
+                 // Production - Strict Enforcement
+                 vscode.window.showErrorMessage(`Security Alert: Extension integrity check failed. The installed version does not match the official release (Hash mismatch).`);
+                 await context.globalState.update('isActivated', false);
+            }
         }
 
     } catch (error) {
-        if (!silent) {
-            vscode.window.showErrorMessage(`Activation failed: ${error instanceof Error ? error.message : error}`);
+        if (context.extensionMode === vscode.ExtensionMode.Development) {
+             console.error('Integrity check error (Dev Bypass):', error);
+             vscode.window.showWarningMessage('Dev Mode: Integrity check error bypassed.');
+             registerCommands(context);
+        } else {
+             if (!silent) {
+                 vscode.window.showErrorMessage(`Activation failed: ${error instanceof Error ? error.message : error}`);
+             }
         }
     }
 }
@@ -261,22 +273,35 @@ function registerCommands(context: vscode.ExtensionContext) {
 
                 if (selection && selection.url) {
                     const content = await fetchUrl(selection.url);
+                    const uri = vscode.Uri.file(gitignorePath);
+                    const edit = new vscode.WorkspaceEdit();
                     
                     if (fs.existsSync(gitignorePath)) {
                         const append = await vscode.window.showWarningMessage('.gitignore already exists. Overwrite or Append?', 'Overwrite', 'Append');
+                        const doc = await vscode.workspace.openTextDocument(uri);
+                        
                         if (append === 'Overwrite') {
-                            fs.writeFileSync(gitignorePath, content);
+                             const range = new vscode.Range(0, 0, doc.lineCount, 0);
+                             edit.replace(uri, range, content);
                         } else if (append === 'Append') {
-                             fs.appendFileSync(gitignorePath, '\n' + content);
+                             const position = new vscode.Position(doc.lineCount, 0);
+                             const prefix = doc.getText().endsWith('\n') ? '' : '\n';
+                             edit.insert(uri, position, prefix + content);
                         } else {
                             return;
                         }
                     } else {
-                        fs.writeFileSync(gitignorePath, content);
+                        edit.createFile(uri, { ignoreIfExists: true });
+                        edit.insert(uri, new vscode.Position(0, 0), content);
                     }
-                    vscode.window.showInformationMessage(`Generated .gitignore for ${selection.label}`);
-                    const doc = await vscode.workspace.openTextDocument(gitignorePath);
-                    await vscode.window.showTextDocument(doc);
+                    
+                    const success = await vscode.workspace.applyEdit(edit);
+                    if (success) {
+                        vscode.window.showInformationMessage(`Generated .gitignore for ${selection.label}`);
+                    } else {
+                        vscode.window.showErrorMessage('Failed to modify .gitignore');
+                    }
+                    // Removed explicit showTextDocument as it confuses custom editor
                 }
             });
         } catch (error) {
@@ -295,21 +320,95 @@ function registerCommands(context: vscode.ExtensionContext) {
             return;
         }
 
+        const mode = await vscode.window.showQuickPick(
+            [
+                { label: 'Smart Sort (Keep Sections & Comments)', description: 'Sorts rules within sections, preserving structure' },
+                { label: 'Flat Sort (Remove Comments)', description: 'Removes all comments and sorts everything alphabetically' }
+            ],
+            { placeHolder: 'Select cleanup mode' }
+        );
+
+        if (!mode) return;
+
         try {
             const content = fs.readFileSync(gitignorePath, 'utf8');
-            const lines = content.split(/\r?\n/);
-            const uniqueLines = new Set<string>();
-            const cleanedLines: string[] = [];
-            
-            for (const line of lines) {
-                const trimmed = line.trim();
-                if (trimmed && !trimmed.startsWith('#') && !uniqueLines.has(trimmed)) {
-                    uniqueLines.add(trimmed);
-                    cleanedLines.push(trimmed);
+            let finalContent = '';
+
+            if (mode.label.startsWith('Remove Comments')) {
+                 const lines = content.split(/\r?\n/);
+                 const uniqueLines = new Set<string>();
+                 const cleanedLines: string[] = [];
+                 
+                 for (const line of lines) {
+                     const trimmed = line.trim();
+                     if (trimmed && !trimmed.startsWith('#') && !uniqueLines.has(trimmed)) {
+                         uniqueLines.add(trimmed);
+                         cleanedLines.push(trimmed);
+                     }
+                 }
+                 cleanedLines.sort();
+                 finalContent = cleanedLines.join('\n') + '\n';
+            } else {
+                // Section-aware sort
+                const lines = content.split(/\r?\n/);
+                interface Section {
+                    comments: string[];
+                    rules: string[];
                 }
+                
+                const sections: Section[] = [];
+                let currentSection: Section = { comments: [], rules: [] };
+                
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed) {
+                        // Empty line -> End current section if it has content, start new
+                        if (currentSection.comments.length > 0 || currentSection.rules.length > 0) {
+                            sections.push(currentSection);
+                            currentSection = { comments: [], rules: [] };
+                        }
+                        continue;
+                    }
+                    
+                    if (trimmed.startsWith('#')) {
+                        // Logic: If we are currently collecting rules, a new comment means a new section starts.
+                        // If we are just collecting comments (header), append to current.
+                        if (currentSection.rules.length > 0) {
+                             sections.push(currentSection);
+                             currentSection = { comments: [], rules: [] };
+                        }
+                        currentSection.comments.push(line); // Keep original indentation/spacing for comments? Or trim? User said "treat comments as section names". Let's keep line as is.
+                    } else {
+                        // Rule
+                        currentSection.rules.push(trimmed);
+                    }
+                }
+                // Push last section
+                if (currentSection.comments.length > 0 || currentSection.rules.length > 0) {
+                    sections.push(currentSection);
+                }
+
+                finalContent = sections.map(section => {
+                    // Dedup and sort rules
+                    const uniqueRules = Array.from(new Set(section.rules)).sort();
+                    
+                    const header = section.comments.length > 0 ? section.comments.join('\n') + '\n' : '';
+                    const body = uniqueRules.join('\n');
+                    
+                    // If both empty (shouldn't happen due to logic above), return empty
+                    if (!header && !body) return '';
+                    
+                    return (header + body).trim(); 
+                }).filter(s => s.length > 0).join('\n\n') + '\n';
             }
-            cleanedLines.sort();
-            fs.writeFileSync(gitignorePath, cleanedLines.join('\n') + '\n');
+            
+            const uri = vscode.Uri.file(gitignorePath);
+            const doc = await vscode.workspace.openTextDocument(uri);
+            const edit = new vscode.WorkspaceEdit();
+            const range = new vscode.Range(0, 0, doc.lineCount, 0);
+            edit.replace(uri, range, finalContent);
+            
+            await vscode.workspace.applyEdit(edit);
             vscode.window.showInformationMessage('.gitignore cleaned and sorted.');
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to clean .gitignore: ${error}`);
@@ -499,14 +598,17 @@ function registerCommands(context: vscode.ExtensionContext) {
         '/' // Trigger on slash
     );
 
+
+
     context.subscriptions.push(
-        addToGitignoreCommand, 
+        addToGitignoreCommand,
         removeFromGitignoreCommand,
         generateGitignoreCommand,
         cleanupGitignoreCommand,
         checkIgnoreCommand,
         addToGlobalGitignoreCommand,
-        provider
+        provider,
+        GitignoreEditorProvider.register(context)
     );
 }
 
