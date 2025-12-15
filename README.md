@@ -1,41 +1,88 @@
 # Gitignore Helper
 
-**Gitignore Helper** is a powerful Visual Studio Code extension designed to streamline the management of your `.gitignore` files. Whether you are adding files, cleaning up rules, or debugging why a file is ignored, this tool has you covered.
+**Gitignore Helper** is the ultimate Visual Studio Code extension for managing your `.gitignore` files. From a powerful **Visual Editor** with intelligent autocomplete to right-click context menu integration, this tool streamlines every aspect of git ignore management.
 
-## Features
+---
 
-### key Features
+## ✨ Key Features
 
-- **Add to .gitignore**: Easily add files or folders to your `.gitignore` directly from the file explorer context menu.
-- **Remove from .gitignore**: Quickly remove entries from `.gitignore` via the context menu.
-- **Generate .gitignore**: Generate a standard `.gitignore` file for your project type (Node, Python, Go, etc.) using the `Generate .gitignore...` command.
-- **Clean & Sort**: Automatically clean up duplicate entries and sort your `.gitignore` file for better readability.
-- **Check Ignore Status**: Right-click any file and select "Check why file is ignored" to see exactly which rule is affecting it.
-- **Global .gitignore Support**: Add files to your global git configuration directly from VS Code.
-- **Autocomplete**: Intelligent autocomplete suggestions for files and folders while editing `.gitignore`.
+-   **🎨 Visual .gitignore Editor**: A dedicated, clean UI for viewing and editing rules.
+-   **🤖 Intelligent Autocomplete**: Smart suggestions for files and folders while editing.
+-   **🖱️ Context Menu Integration**: Add/Remove files directly from the explorer.
+-   **⚡ Quick Generation**: Generate standard `.gitignore` templates (e.g., Python, Node, Flutter) instantly.
+-   **🧹 Clean & Sort**: Automatically remove duplicates and sort your rules.
+-   **🔍 Ignore Diagnostics**: Find out exactly *why* a file is being ignored.
+-   **🌍 Global Support**: Manage your global git configuration with ease.
 
-## Usage
+---
 
-### Context Menu
-Right-click on any file or folder in the Explorer to access:
-- **Add to .gitignore**
-- **Remove from .gitignore**
-- **Add to Global .gitignore**
-- **Check why file is ignored**
+## 🚀 Visual Editor & Autocomplete
 
-### Command Palette
-Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type `Gitignore` to see all available commands:
-- `Gitignore Helper: Generate .gitignore...`
-- `Gitignore Helper: Clean & Sort .gitignore`
+Experience a new way to edit `.gitignore` files. Open any `.gitignore` file to launch the **Visual Editor**.
 
-## Extension Settings
+![Visual Editor UI](https://github.com/mubashardev/gitignore-helper/raw/main/images/floating_buttons.png)
 
-This extension contributes the following settings:
+### Intelligent Autocomplete
+Typing in the editor provides context-aware suggestions for files and folders in your project, complete with icons. It even supports nested directories!
 
-*   `addToGitignore.onlyInGitProjects`: Show context menu items only when inside a Git repository (default: `false`).
-*   `addToGitignore.enableAutocomplete`: Enable autocomplete suggestions for `.gitignore` files (default: `true`).
+![Autocomplete in Action](https://github.com/mubashardev/gitignore-helper/raw/main/images/gitignore_typing_suggestions_1.gif)
 
-## Feedback
-If you have any suggestions or find any bugs, please reach out or open an issue on our [GitHub repository](https://github.com/mubashardev/gitignore-helper).
+> **Pro Tip:** Select a folder to automatically trigger suggestions for its contents. Exact file matches close the suggestion box automatically.
 
-**Enjoy coding without the hassle of unignored files!**
+---
+
+## 🖱️ Context Menu Magic
+
+Right-click on any file or folder in your explorer to access the **Gitignore Helper** submenu.
+
+![Context Menu Options](https://github.com/mubashardev/gitignore-helper/raw/main/images/menu_options.png)
+
+### Add to .gitignore
+Quickly ignore files without opening the editor. You can choose to ignore the specific file, its extension, or a custom pattern.
+
+![Add to Gitignore Options](https://github.com/mubashardev/gitignore-helper/raw/main/images/add_to_gitignore_options.png)
+
+### Check why file is ignored
+Confused why a file is ignored? Right-click and select **Check why file is ignored** to trace the exact rule.
+
+![Check Ignore Status](https://github.com/mubashardev/gitignore-helper/raw/main/images/check_why_file_ignored.png)
+
+---
+
+## 🛠️ Command Palette Tools
+
+Access powerful tools via the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`).
+
+![Command Palette](https://github.com/mubashardev/gitignore-helper/raw/main/images/command_palette.png)
+
+### Generate .gitignore
+Need a fresh start? Search for templates like "Flutter", "Node", or "Python" and generate a comprehensive `.gitignore` file in seconds.
+
+1.  **Search Template**
+    ![Search Template](https://github.com/mubashardev/gitignore-helper/raw/main/images/searching_gitignore_template.png)
+2.  **Select & Create**
+    ![Select Template](https://github.com/mubashardev/gitignore-helper/raw/main/images/choose_gitignore_template.png)
+
+### Clean & Sort
+Keep your `.gitignore` organized. Remove duplicate entries and sort lines alphabetically or by category.
+
+![Sort Options](https://github.com/mubashardev/gitignore-helper/raw/main/images/choose_sort_type.png)
+
+---
+
+## ⚙️ Settings
+
+Customize the extension to fit your workflow.
+
+![Settings](https://github.com/mubashardev/gitignore-helper/raw/main/images/settings_options.png)
+
+-   `gitignoreHelper.onlyInGitProjects`: Restrict context menu items to git repositories only.
+-   `gitignoreHelper.enableAutocomplete`: Toggle the autocomplete feature in the visual editor.
+
+---
+
+## 🤝 Feedback & Support
+
+We love hearing from you! If you have suggestions or encounter issues, please open an issue on our [GitHub Repository](https://github.com/mubashardev/gitignore-helper).
+
+**Happy Coding!** 🚀
